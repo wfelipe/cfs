@@ -21,6 +21,8 @@ static struct inode_operations cfs_dir_inode_operations;
 static struct inode_operations cfs_file_inode_operations;
 static struct file_operations cfs_file_operations;
 static struct address_space_operations cfs_aops;
+static struct file_operations cfs_file_operations;
+
 struct kmem_cache *cfs_inode_cachep;
 
 /*
@@ -91,7 +93,7 @@ struct inode *cfs_make_inode (struct super_block *sb, int mode, dev_t dev)
 		case S_IFREG:
 			inode->i_op = &cfs_file_inode_operations;
 			inode->i_fop = &cfs_file_operations;
-//			inode->i_mapping->a_ops = &cfs_aops;
+			inode->i_mapping->a_ops = &cfs_aops;
 			break;
 		case S_IFDIR:
 			inode->i_op = &cfs_dir_inode_operations;
@@ -166,6 +168,11 @@ int cfs_writepage (struct page *page, struct writeback_control *wbc)
 }
 
 /*
+ * file ops
+ */
+//int (*mmap) (struct file *, struct vm_area_struct *);
+
+/*
  * file system struct definitions
  */
 static struct inode_operations cfs_dir_inode_operations = {
@@ -180,7 +187,25 @@ static struct inode_operations cfs_dir_inode_operations = {
 	.rename		= simple_rename,
 };
 
+static struct inode_operations cfs_file_inode_operations = {
+	.getattr	= simple_getattr,
+};
+
 static struct address_space_operations cfs_aops = {
-	.readpage	= cfs_readpage,
-	.writepage	= cfs_writepage,
+	.readpage	= simple_readpage,
+	.write_begin	= simple_write_begin,
+	.write_end	= simple_write_end,
+//	.set_page_dirty	= __set_page_dirty_no_writeback,
+};
+
+static struct file_operations cfs_file_operations = {
+	.read		= do_sync_read,
+	.aio_read	= generic_file_aio_read,
+	.write		= do_sync_write,
+	.aio_write	= generic_file_aio_write,
+	.mmap		= generic_file_mmap,
+	.fsync		= simple_sync_file,
+	.splice_read	= generic_file_splice_read,
+	.splice_write	= generic_file_splice_write,
+	.llseek		= generic_file_llseek,
 };
