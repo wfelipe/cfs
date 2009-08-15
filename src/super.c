@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2007 Oracle.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License v2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 021110-1307, USA.
+ */
+
 #include <linux/module.h>
 #include <linux/string.h>
 #include <linux/fs.h>
@@ -61,19 +79,19 @@ out:
 static int cfs_get_sb (struct file_system_type *fs_type, int flags,
 	const char *dev_name, void *data, struct vfsmount *mnt)
 {
+	int ret;
 	printk (KERN_INFO "cfs_get_sb %s\n", dev_name);
-	//return get_sb_bdev (fs_type, flags, dev_name, data, cfs_fill_super, mnt);
+	return get_sb_bdev (fs_type, flags, dev_name, data, cfs_fill_super, mnt);
 	//return get_sb_single (fs_type, flags, data, cfs_fill_super, mnt);
-	return get_sb_nodev (fs_type, flags, data, cfs_fill_super, mnt);
+	//return get_sb_nodev (fs_type, flags, data, cfs_fill_super, mnt);
 }
 
 static struct file_system_type cfs_type = {
 	.owner		= THIS_MODULE,
 	.name		= "cfs",
 	.get_sb		= cfs_get_sb,
-	.kill_sb	= kill_litter_super,
+	.kill_sb	= kill_anon_super,
 	.fs_flags	= FS_REQUIRES_DEV,
-	.next		= NULL,
 };
 
 static int __init init_cfs (void)

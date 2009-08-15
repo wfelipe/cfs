@@ -193,6 +193,7 @@ static struct inode_operations cfs_file_inode_operations = {
 
 static struct address_space_operations cfs_aops = {
 	.readpage	= simple_readpage,
+	.writepage	= cfs_writepage,
 	.write_begin	= simple_write_begin,
 	.write_end	= simple_write_end,
 //	.set_page_dirty	= __set_page_dirty_no_writeback,

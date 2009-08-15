@@ -13,7 +13,7 @@ clean:
 
 test:
 	sudo insmod cfs.ko
-	sudo mount -t cfs none /mnt
+	sudo mount -t cfs /dev/debian/cfs /mnt
 untest:
 	sudo umount /mnt
 	sudo rmmod cfs
