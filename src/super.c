@@ -35,13 +35,37 @@
 #include <asm/uaccess.h>
 #include "cfs.h"
 
-#define cfs_SUPER_MAGIC 0x19980122
+#define CFS_SUPER_MAGIC 0x19980122
+
+static void cfs_put_super (struct super_block *sb)
+{
+	struct cfs_sb_info *sbi = sb->s_fs_info;
+
+	printk (KERN_INFO "cfs_put_super\n");
+
+	sb->s_fs_info = NULL;
+	kfree (sbi);
+}
+
+static int cfs_statfs (struct dentry *dentry, struct kstatfs *buf)
+{
+	struct super_block *sb = dentry->d_sb;
+	struct cfs_sb_info *sbi = sb->s_fs_info;
+
+	buf->f_type = CFS_SUPER_MAGIC;
+	buf->f_bsize = sb->s_blocksize;
+	buf->f_blocks = 1024;
+	buf->f_bfree = 1023;
+	buf->f_bavail = 1023;
+
+	return 0;
+}
 
 static const struct super_operations cfs_s_ops = {
 	.alloc_inode	= cfs_alloc_inode,
 	.destroy_inode	= cfs_destroy_inode,
-	.statfs		= simple_statfs,
-	.drop_inode	= generic_delete_inode,
+	.put_super	= cfs_put_super,
+	.statfs		= cfs_statfs,
 	.show_options	= generic_show_options,
 };
 
@@ -49,13 +73,18 @@ static int cfs_fill_super (struct super_block *sb, void *data, int silent)
 {
 	struct inode *root;
 	struct dentry *root_dentry;
+	struct cfs_sb_info *sbi;
 
 	printk (KERN_INFO "cfs_fill_super\n");
 
+	sbi = kzalloc (sizeof (struct cfs_sb_info), GFP_KERNEL);
+	if (!sbi)
+		return -ENOMEM;
+	sb->s_fs_info = sbi;
 	/* defining block size, magic number and superblock ops */
 	sb->s_blocksize = PAGE_CACHE_SIZE;
 	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
-	sb->s_magic = cfs_SUPER_MAGIC;
+	sb->s_magic = CFS_SUPER_MAGIC;
 	sb->s_op = &cfs_s_ops;
 
 	/* creating the root inode */
@@ -79,8 +108,8 @@ out:
 static int cfs_get_sb (struct file_system_type *fs_type, int flags,
 	const char *dev_name, void *data, struct vfsmount *mnt)
 {
-	int ret;
 	printk (KERN_INFO "cfs_get_sb %s\n", dev_name);
+
 	return get_sb_bdev (fs_type, flags, dev_name, data, cfs_fill_super, mnt);
 	//return get_sb_single (fs_type, flags, data, cfs_fill_super, mnt);
 	//return get_sb_nodev (fs_type, flags, data, cfs_fill_super, mnt);
@@ -90,7 +119,7 @@ static struct file_system_type cfs_type = {
 	.owner		= THIS_MODULE,
 	.name		= "cfs",
 	.get_sb		= cfs_get_sb,
-	.kill_sb	= kill_anon_super,
+	.kill_sb	= kill_block_super,
 	.fs_flags	= FS_REQUIRES_DEV,
 };
 
@@ -114,7 +143,7 @@ static void __exit exit_cfs (void)
 }
 
 MODULE_AUTHOR ("Wilson Felipe");
-MODULE_DESCRIPTION ("A simple filesystem");
+MODULE_DESCRIPTION ("A compressed filesystem");
 MODULE_LICENSE ("GPL");
 module_init (init_cfs);
 module_exit (exit_cfs);

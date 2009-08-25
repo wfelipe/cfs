@@ -15,6 +15,14 @@ struct cfs_inode {
 	u64 real_size;
 	struct cfs_compress *compress;
 	struct inode vfs_inode;
+
+	/* standard acl pointers */
+	struct posix_acl *i_acl;
+	struct posix_acl *i_default_acl;
+};
+
+struct cfs_sb_info {
+	unsigned long mount_opt;
 };
 
 struct inode *cfs_make_inode (struct super_block *sb, int mode, dev_t dev);
