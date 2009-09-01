@@ -47,6 +47,11 @@ static void cfs_put_super (struct super_block *sb)
 	kfree (sbi);
 }
 
+static void cfs_write_super (struct super_block *sb)
+{
+	sb->s_dirt = 0;
+}
+
 static int cfs_statfs (struct dentry *dentry, struct kstatfs *buf)
 {
 	struct super_block *sb = dentry->d_sb;
@@ -65,6 +70,7 @@ static const struct super_operations cfs_s_ops = {
 	.alloc_inode	= cfs_alloc_inode,
 	.destroy_inode	= cfs_destroy_inode,
 	.put_super	= cfs_put_super,
+	.write_super	= cfs_write_super,
 	.statfs		= cfs_statfs,
 	.show_options	= generic_show_options,
 };
@@ -76,6 +82,7 @@ static int cfs_fill_super (struct super_block *sb, void *data, int silent)
 	struct cfs_sb_info *sbi;
 
 	printk (KERN_INFO "cfs_fill_super\n");
+	printk (KERN_INFO "MAGIC %lx\n", sb->s_magic);
 
 	sbi = kzalloc (sizeof (struct cfs_sb_info), GFP_KERNEL);
 	if (!sbi)
@@ -111,8 +118,6 @@ static int cfs_get_sb (struct file_system_type *fs_type, int flags,
 	printk (KERN_INFO "cfs_get_sb %s\n", dev_name);
 
 	return get_sb_bdev (fs_type, flags, dev_name, data, cfs_fill_super, mnt);
-	//return get_sb_single (fs_type, flags, data, cfs_fill_super, mnt);
-	//return get_sb_nodev (fs_type, flags, data, cfs_fill_super, mnt);
 }
 
 static struct file_system_type cfs_type = {
